@@ -3,7 +3,7 @@ services:
   astro-api:
     build: .
     ports:
-      - "3330:3330"
+      - "3330:8000"
 
     volumes:
       - ./svg:/app/svg
