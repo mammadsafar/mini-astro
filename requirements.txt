@@ -1,5 +1,0 @@
-fastapi
-uvicorn
-kerykeion==4.25.3
-pytz
-gunicorn

@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+kerykeion==4.25.3
+pytz
+gunicorn
+pandas
+rapidfuzz
+openpyxl
+langchain_community
+openai
+langchain
+watchgod>=0.7

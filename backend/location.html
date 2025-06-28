@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>چارت آسترولوژی</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body { font-family: sans-serif; direction: rtl; padding: 20px; background: #f0f0f0; }
+    button { padding: 10px 15px; margin: 5px; font-size: 15px; cursor: pointer; }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; background: #fff; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    .modal { display: none; position: fixed; top: 0; right: 0; left: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; }
+    .modal-content { background: #fff; margin: 10% auto; padding: 20px; width: 90%; max-width: 500px; position: relative; }
+    .close { position: absolute; left: 10px; top: 10px; font-size: 20px; color: red; cursor: pointer; }
+    input, label { display: block; width: 100%; margin-bottom: 10px; }
+    #map { height: 250px; margin-bottom: 10px; }
+    .action-buttons button { margin: 0 2px; }
+  </style>
+</head>
+<body>
+  <h2>افزودن اطلاعات فردی</h2>
+  <button onclick="openModal()">افزودن فرد جدید</button>
+
+  <table id="chartTable">
+    <thead>
+      <tr>
+        <th>انتخاب</th>
+        <th>نام</th>
+        <th>تاریخ تولد</th>
+        <th>ساعت</th>
+        <th>محل (شهر)</th>
+        <th>Lat</th>
+        <th>Lng</th>
+        <th>Timezone</th>
+        <th>اقدامات</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <h3>نوع چارت</h3>
+  <button onclick="generateChart('natal')">چارت تولد</button>
+  <button onclick="generateChart('transit')">چارت ترانزیت</button>
+  <button onclick="generateChart('synastry')">چارت رابطه</button>
+  <button onclick="generateChart('composite')">چارت ترکیبی</button>
+  <button onclick="generateChart('report')">گزارش کامل</button>
+
+  <div class="modal" id="formModal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">×</span>
+      <form id="personForm">
+        <label>نام</label>
+        <input name="name" required>
+
+        <label>تاریخ تولد</label>
+        <input type="date" name="birthdate" required>
+
+        <label>ساعت تولد</label>
+        <input type="time" name="birthtime" required>
+
+        <label>محل تولد (نام شهر)</label>
+        <input name="city" id="cityInput" required autocomplete="on">
+
+        <div id="map"></div>
+        <small>روی نقشه کلیک کنید یا نام شهر را تایپ کنید</small>
+
+        <button type="submit">افزودن</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById("formModal");
+    const form = document.getElementById("personForm");
+    const tableBody = document.getElementById("tableBody");
+    let people = [], selectedLatLng = null, map, marker;
+
+    function openModal() {
+      modal.style.display = 'block';
+      setTimeout(() => map.invalidateSize(), 100);
+    }
+
+    function closeModal() {
+      modal.style.display = 'none';
+      form.reset();
+      if (marker) map.removeLayer(marker);
+      selectedLatLng = null;
+    }
+
+    function initMap() {
+      map = L.map('map').setView([35.6892, 51.3890], 5);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+      map.on('click', function(e) {
+        selectedLatLng = e.latlng;
+        if (marker) marker.remove();
+        marker = L.marker(e.latlng).addTo(map);
+      });
+    }
+
+    document.getElementById("cityInput").addEventListener("input", function() {
+      const query = this.value.trim();
+      if (!query) return;
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lon = parseFloat(data[0].lon);
+            selectedLatLng = { lat, lng: lon };
+            if (marker) marker.remove();
+            marker = L.marker([lat, lon]).addTo(map);
+            map.setView([lat, lon], 10);
+          }
+        });
+    });
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+      if (!selectedLatLng) return alert("لطفاً محل را مشخص کنید.");
+
+      const fd = new FormData(form);
+      const person = {
+        name: fd.get("name"),
+        birthdate: fd.get("birthdate"),
+        birthtime: fd.get("birthtime"),
+        city: fd.get("city"),
+        lat: selectedLatLng.lat,
+        lng: selectedLatLng.lng,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      };
+
+      people.push(person);
+      addRowToTable(person);
+      closeModal();
+    });
+
+    function addRowToTable(p, index = people.length - 1) {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td><input type="checkbox" data-index="${index}"></td>
+        <td>${p.name}</td>
+        <td>${p.birthdate}</td>
+        <td>${p.birthtime}</td>
+        <td>${p.city}</td>
+        <td>${p.lat.toFixed(6)}</td>
+        <td>${p.lng.toFixed(6)}</td>
+        <td>${p.timezone}</td>
+        <td class="action-buttons">
+          <button onclick="viewChart(${index})">چارت</button>
+          <button onclick="copyJson(${index})">کپی JSON</button>
+          <button onclick="updateUser(${index})">آپدیت</button>
+          <button onclick="deleteUser(${index})">حذف</button>
+        </td>
+      `;
+      tableBody.appendChild(row);
+    }
+
+    function copyJson(index) {
+      const p = people[index];
+      const json = JSON.stringify(p, null, 2);
+      navigator.clipboard.writeText(json).then(() => alert("کپی شد!"));
+    }
+
+    function deleteUser(index) {
+      if (!confirm("آیا مطمئن هستید؟")) return;
+      fetch(`http://localhost:3330/users/${index}`, { method: 'DELETE' })
+        .then(() => location.reload())
+        .catch(() => alert("خطا در حذف"));
+    }
+
+    function updateUser(index) {
+      const p = people[index];
+      // نمایش فرم با مقادیر پرشده و سپس PUT /users/{id}
+      alert("آپدیت باید پیاده‌سازی شود");
+    }
+
+    function viewChart(index) {
+      const p = people[index];
+      const dt = splitDateTime(p.birthdate, p.birthtime);
+      const payload = {
+        name: p.name,
+        year: dt.year,
+        month: dt.month,
+        day: dt.day,
+        hour: dt.hour,
+        minute: dt.minute,
+        lat: p.lat,
+        lng: p.lng,
+        city: p.city,
+        tz_str: p.timezone
+      };
+      fetch("http://localhost:3330/astro/chart-svg", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+        .then(res => res.text())
+        .then(svg => {
+          const newWindow = window.open();
+          newWindow.document.write(svg);
+        });
+    }
+
+    function splitDateTime(dateStr, timeStr) {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const [hour, minute] = timeStr.split(':').map(Number);
+      return { year, month, day, hour, minute };
+    }
+
+    function generateChart(type) {
+        const selectedIndexes = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => parseInt(cb.dataset.index));
+
+        if ((['natal', 'transit', 'report'].includes(type) && selectedIndexes.length !== 1) || (['synastry', 'composite'].includes(type) && selectedIndexes.length !== 2)) {
+            return alert("تعداد انتخاب‌ها با نوع چارت مطابقت ندارد.");
+        }
+
+        function toPayload(p) {
+            const dt = splitDateTime(p.birthdate, p.birthtime);
+            return {
+            name: p.name,
+            year: dt.year,
+            month: dt.month,
+            day: dt.day,
+            hour: dt.hour,
+            minute: dt.minute,
+            lat: p.lat,
+            lng: p.lng,
+            city: p.city,
+            tz_str: p.timezone
+            };
+        }
+
+        let url = "", payload = {};
+
+        const selectedPeople = selectedIndexes.map(i => people[i]);
+
+        switch(type) {
+            case 'natal':
+            url = "http://localhost:3330/astro/chart-json";
+            payload = toPayload(selectedPeople[0]);
+            break;
+            case 'transit':
+            url = "http://localhost:3330/astro/chart-svg";
+            payload = toPayload(selectedPeople[0]);
+            break;
+            case 'report':
+            url = "http://localhost:3330/astro/report";
+            payload = toPayload(selectedPeople[0]);
+            break;
+            case 'synastry':
+            url = "http://localhost:3330/astro/synastry";
+            payload = {
+                person1: toPayload(selectedPeople[0]),
+                person2: toPayload(selectedPeople[1])
+            };
+            break;
+            case 'composite':
+            url = "http://localhost:3330/astro/composite";
+            payload = {
+                person1: toPayload(selectedPeople[0]),
+                person2: toPayload(selectedPeople[1])
+            };
+            break;
+            default:
+            return alert("نوع چارت نامعتبر است");
+        }
+
+        fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.ok ? res.json().catch(() => res.text()) : Promise.reject("خطا در پاسخ"))
+        .then(data => {
+            if (typeof data === 'string') {
+            const w = window.open();
+            w.document.write(data);
+            } else {
+            alert("پاسخ دریافتی:" + JSON.stringify(data, null, 2));
+            }
+        })
+        .catch(err => alert("خطا در ارسال یا دریافت اطلاعات: " + err));
+        
+    }
+    
+
+        window.onload = () => {
+  initMap();
+  fetch('http://localhost:3330/users/')
+    .then(res => res.json())
+    .then(data => {
+      people = data;
+      people.forEach((person, index) => addRowToTable(person, index));
+    })
+    .catch(err => console.error('خطا در دریافت لیست کاربران:', err));
+};
+  </script>
+</body>
+</html>
