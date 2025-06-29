@@ -57,7 +57,7 @@ docker-compose.override.yml
 
 # SQLite / DB
 *.sqlite3
-*.db
+# *.db
 
 # VSCode debugger
 .vscode/
