@@ -1,26 +1,29 @@
-# 1. نصب فقط وابستگی‌ها
+# frontend/Dockerfile
+
+# مرحله اول: نصب وابستگی‌ها
 FROM node:18-alpine AS deps
 WORKDIR /app
 
-# تنظیم رجیستری و retry قبل از نصب
 RUN npm config set registry https://registry.npmmirror.com
-RUN npm config set fetch-retries 5 && npm config set fetch-retry-mintimeout 20000 && npm config set fetch-retry-maxtimeout 120000
+RUN npm config set fetch-retries 5 \
+  && npm config set fetch-retry-mintimeout 20000 \
+  && npm config set fetch-retry-maxtimeout 120000
 
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# 2. ساخت پروژه
+# مرحله دوم: build برنامه
 FROM node:18-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+COPY .env.production .env   # 👈 برای زمان build
 
-# اینجا به طور شفاف NODE_ENV را production می‌گذاریم
 ENV NODE_ENV=production
 RUN npm run build
 
-# 3. اجرای اپ در محیط production
+# مرحله سوم: اجرای برنامه
 FROM node:18-alpine AS runner
 WORKDIR /app
 

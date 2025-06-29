@@ -1,11 +1,14 @@
-# Dockerfile.dev
+# frontend/Dockerfile.dev
+
 FROM node:18-alpine
 
 WORKDIR /app
 
-# رجیستری npm و تلاش مجدد در صورت خطا
+# استفاده از رجیستری npm ایران و تنظیمات اتصال
 RUN npm config set registry https://registry.npmmirror.com
-RUN npm config set fetch-retries 5 && npm config set fetch-retry-mintimeout 20000 && npm config set fetch-retry-maxtimeout 120000
+RUN npm config set fetch-retries 5 \
+  && npm config set fetch-retry-mintimeout 20000 \
+  && npm config set fetch-retry-maxtimeout 120000
 
 COPY package.json package-lock.json ./
 RUN npm install
@@ -13,5 +16,4 @@ RUN npm install
 COPY . .
 
 EXPOSE 3000
-
 CMD ["npm", "run", "dev"]

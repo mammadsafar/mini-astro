@@ -7,8 +7,7 @@ services:
     ports:
       - "3330:3330"
     volumes:
-      - ./backend:/app     # تمام کدها
-      # - /app/__pycache__   # جلوگیری از کَش
+      - ./backend:/app
     networks:
       - astro-network
 
@@ -16,17 +15,15 @@ services:
     container_name: astro-frontend
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
-      # dockerfile: Dockerfile
+      # dockerfile: Dockerfile.dev  # یا Dockerfile برای prod
+      dockerfile: Dockerfile  # یا Dockerfile برای prod
     ports:
       - "3000:3000"
     env_file:
-      - .env
-    environment:
-      - NEXT_PUBLIC_API_URL=http://192.168.0.105:3330
+      - ./frontend/.env           # برای dev (در prod تغییر بده)
     volumes:
       - ./frontend:/app
-      - /app/.next        # مانع sync مستقیم `.next` با سیستم میزبان میشه
+      - /app/.next
       - frontend_node_modules:/app/node_modules
       - ~/.npm:/root/.npm
     networks:
