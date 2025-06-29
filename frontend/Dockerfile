@@ -29,9 +29,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
-# اگر فایل env داری
-COPY .env .env
 
 EXPOSE 3000
-# CMD ["npm", "start"]
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]
+# CMD ["npm", "run", "dev"]
