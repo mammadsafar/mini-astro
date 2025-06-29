@@ -16,20 +16,20 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# اینجا به طور شفاف NODE_ENV را production می‌گذاریم
+ENV NODE_ENV=production
 RUN npm run build
 
 # 3. اجرای اپ در محیط production
 FROM node:18-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV=develop
+ENV NODE_ENV=production
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
-
 EXPOSE 3000
 CMD ["npm", "start"]
-# CMD ["npm", "run", "dev"]
