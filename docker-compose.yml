@@ -23,7 +23,7 @@ services:
     env_file:
       - .env
     environment:
-      - API_URL=http://192.168.0.105:3330
+      - NEXT_PUBLIC_API_URL=http://192.168.0.105:3330
     volumes:
       - ./frontend:/app
       - /app/.next        # مانع sync مستقیم `.next` با سیستم میزبان میشه

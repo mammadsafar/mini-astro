@@ -38,7 +38,7 @@ interface Person {
   tz_str: string
 }
 
-const API_URL = process.env.API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 
 interface ChartData {
