@@ -16,8 +16,8 @@ services:
     container_name: astro-frontend
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
-      # dockerfile: Dockerfile
+      # dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     env_file:
