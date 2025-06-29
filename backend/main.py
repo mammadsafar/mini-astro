@@ -256,4 +256,3 @@ def get_composite_chart(data: AstroPairInput):
     s2 = create_subject(data.person2)
     composite = CompositeSubjectFactory(s1, s2).get_midpoint_composite_subject_model()
     return composite
-

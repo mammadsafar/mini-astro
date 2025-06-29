@@ -106,7 +106,7 @@ const loadPeople = async () => {
   try {
     setIsLoading(true);
 
-    const response = await fetch("http://localhost:3330/users/");
+    const response = await fetch("process.env.API_URL/users/");
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
@@ -138,7 +138,7 @@ const loadPeople = async () => {
     setPeople(safePeople);
   } catch (error) {
     console.error("خطا در دریافت اطلاعات:", error);
-    alert("❌ خطا در اتصال به سرور. لطفاً مطمئن شوید که سرور روی http://localhost:3330 در حال اجرا است.");
+    alert("❌ خطا در اتصال به سرور. لطفاً مطمئن شوید که سرور روی process.env.API_URL در حال اجرا است.");
     setPeople([]);
   } finally {
     setIsLoading(false);
@@ -148,7 +148,7 @@ const loadPeople = async () => {
   // const loadPeople = async () => {
   //   try {
   //     setIsLoading(true)
-  //     const response = await fetch("http://localhost:3330/users/")
+  //     const response = await fetch("process.env.API_URL/users/")
   //     if (response.ok) {
   //       const data = await response.json()
   //       console.log(data)
@@ -231,7 +231,7 @@ const loadPeople = async () => {
       if (editingPerson) {
         // Update existing person
         try {
-          const response = await fetch(`http://localhost:3330/users/${editingPerson.id}`, {
+          const response = await fetch(`process.env.API_URL/users/${editingPerson.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(personData),
@@ -251,7 +251,7 @@ const loadPeople = async () => {
       } else {
         // Add new person
         try {
-          const response = await fetch("http://localhost:3330/users/", {
+          const response = await fetch("process.env.API_URL/users/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(personData),
@@ -285,7 +285,7 @@ const loadPeople = async () => {
       setIsLoading(true)
 
       try {
-        const response = await fetch(`http://localhost:3330/users/${id}`, {
+        const response = await fetch(`process.env.API_URL/users/${id}`, {
           method: "DELETE",
         })
 
@@ -406,26 +406,26 @@ const loadPeople = async () => {
 
     switch (type) {
       case "natal":
-        url = "http://localhost:3330/astro/chart-json"
+        url = "process.env.API_URL/astro/chart-json"
         payload = toPayload(selectedPeopleData[0])
         break
       case "transit":
-        url = "http://localhost:3330/astro/chart-svg"
+        url = "process.env.API_URL/astro/chart-svg"
         payload = toPayload(selectedPeopleData[0])
         break
       case "report":
-        url = "http://localhost:3330/astro/report"
+        url = "process.env.API_URL/astro/report"
         payload = toPayload(selectedPeopleData[0])
         break
       case "synastry":
-        url = "http://localhost:3330/astro/synastry"
+        url = "process.env.API_URL/astro/synastry"
         payload = {
           person1: toPayload(selectedPeopleData[0]),
           person2: toPayload(selectedPeopleData[1]),
         }
         break
       case "composite":
-        url = "http://localhost:3330/astro/composite"
+        url = "process.env.API_URL/astro/composite"
         payload = {
           person1: toPayload(selectedPeopleData[0]),
           person2: toPayload(selectedPeopleData[1]),

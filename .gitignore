@@ -35,7 +35,7 @@ pip-delete-this-directory.txt
 venv/
 env/
 .venv/
-.env/
+# .env/
 ENV/
 env.bak/
 venv.bak/
@@ -53,7 +53,7 @@ venv.bak/
 # Docker
 *.log
 docker-compose.override.yml
-.env
+# .env
 
 # SQLite / DB
 *.sqlite3

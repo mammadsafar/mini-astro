@@ -20,6 +20,8 @@ services:
       # dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     volumes:
       - ./frontend:/app
       - /app/.next        # مانع sync مستقیم `.next` با سیستم میزبان میشه
