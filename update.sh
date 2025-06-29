@@ -13,12 +13,12 @@ echo -e "${BLUE}🔄 Pulling latest changes from Git...${NC}"
 git pull origin main || { echo -e "${RED}❌ Git pull failed. Check your repo and connection.${NC}"; exit 1; }
 
 echo -e "${YELLOW}🔧 Building containers (dry-run)...${NC}"
-docker-compose -f docker-compose.yml build || { echo -e "${RED}❌ Build failed. Aborting update.${NC}"; exit 1; }
+docker compose -f docker compose.yml build || { echo -e "${RED}❌ Build failed. Aborting update.${NC}"; exit 1; }
 
 echo -e "${YELLOW}🛑 Shutting down current containers...${NC}"
-docker-compose -f docker-compose.yml down || { echo -e "${RED}❌ Failed to shut down containers.${NC}"; exit 1; }
+docker compose -f docker compose.yml down || { echo -e "${RED}❌ Failed to shut down containers.${NC}"; exit 1; }
 
 echo -e "${GREEN}🚀 Starting new containers...${NC}"
-docker-compose -f docker-compose.yml up -d || { echo -e "${RED}❌ Failed to start containers.${NC}"; exit 1; }
+docker compose -f docker compose.yml up -d || { echo -e "${RED}❌ Failed to start containers.${NC}"; exit 1; }
 
 echo -e "${GREEN}✅ Update complete! Containers are up and running.${NC}"
