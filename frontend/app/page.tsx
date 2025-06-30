@@ -216,72 +216,72 @@ const loadPeople = async () => {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault()
 
-    if (!formData.lat || !formData.lng) {
-      alert("لطفاً محل تولد را روی نقشه مشخص کنید")
-      return
-    }
+  //   if (!formData.lat || !formData.lng) {
+  //     alert("لطفاً محل تولد را روی نقشه مشخص کنید")
+  //     return
+  //   }
 
-    const personData = {
-      ...formData,
-      tz_str: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      id: editingPerson?.id || Date.now().toString(),
-    }
+  //   const personData = {
+  //     ...formData,
+  //     tz_str: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  //     id: editingPerson?.id || Date.now().toString(),
+  //   }
 
-    try {
-      setIsLoading(true)
+  //   try {
+  //     setIsLoading(true)
 
-      if (editingPerson) {
-        // Update existing person
-        try {
-          const response = await fetch(`${API_URL}/users/${editingPerson.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(personData),
-          })
+  //     if (editingPerson) {
+  //       // Update existing person
+  //       try {
+  //         const response = await fetch(`${API_URL}/users/${editingPerson.id}`, {
+  //           method: "PUT",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify(personData),
+  //         })
 
-          if (response.ok) {
-            setPeople((prev) => prev.map((p) => (p.id === editingPerson.id ? personData : p)))
-            alert("اطلاعات با موفقیت به‌روزرسانی شد")
-          } else {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-          }
-        } catch (fetchError) {
-          // Update locally if server is not available
-          setPeople((prev) => prev.map((p) => (p.id === editingPerson.id ? personData : p)))
-          alert("سرور در دسترس نیست. اطلاعات به صورت محلی ذخیره شد.")
-        }
-      } else {
-        // Add new person
-        try {
-          const response = await fetch(`${API_URL}/users/`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(personData),
-          })
+  //         if (response.ok) {
+  //           setPeople((prev) => prev.map((p) => (p.id === editingPerson.id ? personData : p)))
+  //           alert("اطلاعات با موفقیت به‌روزرسانی شد")
+  //         } else {
+  //           throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  //         }
+  //       } catch (fetchError) {
+  //         // Update locally if server is not available
+  //         setPeople((prev) => prev.map((p) => (p.id === editingPerson.id ? personData : p)))
+  //         alert("سرور در دسترس نیست. اطلاعات به صورت محلی ذخیره شد.")
+  //       }
+  //     } else {
+  //       // Add new person
+  //       try {
+  //         const response = await fetch(`${API_URL}/users/`, {
+  //           method: "POST",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify(personData),
+  //         })
 
-          if (response.ok) {
-            setPeople((prev) => [...prev, personData])
-            alert("فرد جدید با موفقیت اضافه شد")
-          } else {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-          }
-        } catch (fetchError) {
-          // Add locally if server is not available
-          setPeople((prev) => [...prev, personData])
-          alert("سرور در دسترس نیست. فرد به صورت محلی اضافه شد.")
-        }
-      }
-    } catch (error) {
-      console.error("خطا در ذخیره اطلاعات:", error)
-      alert("خطا در ذخیره اطلاعات: " + error.message)
-    } finally {
-      setIsLoading(false)
-      closeModal()
-    }
-  }
+  //         if (response.ok) {
+  //           setPeople((prev) => [...prev, personData])
+  //           alert("فرد جدید با موفقیت اضافه شد")
+  //         } else {
+  //           throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  //         }
+  //       } catch (fetchError) {
+  //         // Add locally if server is not available
+  //         setPeople((prev) => [...prev, personData])
+  //         alert("سرور در دسترس نیست. فرد به صورت محلی اضافه شد.")
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("خطا در ذخیره اطلاعات:", error)
+  //     alert("خطا در ذخیره اطلاعات: " + error.message)
+  //   } finally {
+  //     setIsLoading(false)
+  //     closeModal()
+  //   }
+  // }
 
   const deletePerson = async (id: string) => {
     if (!confirm("آیا از حذف این فرد مطمئن هستید؟")) return
