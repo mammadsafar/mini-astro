@@ -63,11 +63,8 @@ Base.metadata.create_all(bind=engine)
 # ----- Pydantic Schemas -----
 class UserCreate(BaseModel):
     name: str
-    year: int
-    month: int
-    day: int
-    hour: int
-    minute: int
+    birthdate: str
+    birthtime: str
     lat: float
     lng: float
     city: str
@@ -172,7 +169,19 @@ def build_chart(data: dict) -> dict:
 # ----- CRUD Endpoints -----
 @app.post("/users/", response_model=UserOut, summary="Create New User (JSON)", description="Creat new User chart.")
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = User(**user.dict())
+    new_user = {
+        "name":user.name,
+        "year": user.birthdate.split('-')[0],
+        "month":user.birthdate.split('-')[1],
+        "day":user.birthdate.split('-')[2],
+        "hour":user.birthtime.split(':')[0],
+        "minute":user.birthtime.split(':')[1],
+        "lat":user.lat,
+        "lng":user.lng,
+        "city":user.city,
+        "tz_str":user.tz_str,
+    }
+    db_user = User(**new_user)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -191,11 +200,22 @@ def list_users(db: Session = Depends(get_db)):
 
 @app.put("/users/{user_id}", response_model=UserOut)
 def update_user(user_id: int, user_data: UserCreate, db: Session = Depends(get_db)):
-    print(user_data)
+    new_user = {
+        "name":user_data.name,
+        "year": user_data.birthdate.split('-')[0],
+        "month":user_data.birthdate.split('-')[1],
+        "day":user_data.birthdate.split('-')[2],
+        "hour":user_data.birthtime.split(':')[0],
+        "minute":user_data.birthtime.split(':')[1],
+        "lat":user_data.lat,
+        "lng":user_data.lng,
+        "city":user_data.city,
+        "tz_str":user_data.tz_str,
+    }
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    for key, value in user_data.dict().items():
+    for key, value in new_user.items():
         setattr(user, key, value)
     db.commit()
     db.refresh(user)

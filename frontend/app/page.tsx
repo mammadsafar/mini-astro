@@ -55,11 +55,8 @@ export default function AstrologyChartApp() {
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
-    year: 0,
-    month: 0,
-    day: 0,
-    hour: 0,
-    minute: 0,
+    birthdate: "",
+    birthtime: "",
     city: "",
     lat: 0,
     lng: 0,
@@ -332,11 +329,8 @@ const loadPeople = async () => {
 
       setFormData({
         name: person.name,
-        year: year, 
-        month: month, 
-        day: day, 
-        hour: hour, 
-        minute: minute, 
+        birthdate: person.birthdate, 
+        birthtime: person.birthtime, 
         city: person.city,
         lat: person.lat,
         lng: person.lng,
@@ -346,11 +340,8 @@ const loadPeople = async () => {
       setEditingPerson(null)
       setFormData({
         name: "",
-        year: 0, 
-        month: 0, 
-        day: 0, 
-        hour: 0, 
-        minute: 0, 
+        birthdate: "", 
+        birthtime: "", 
         city: "",
         lat: 0,
         lng: 0,
