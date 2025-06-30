@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -47,28 +46,31 @@ interface ChartData {
 }
 
 export default function AstrologyChartApp() {
+  // حالا formData شامل birthdate و birthtime رشته‌ای است:
+  const [formData, setFormData] = useState({
+    name: "",
+    birthdate: "", // مثلا "2023-06-30"
+    birthtime: "", // مثلا "14:30"
+    city: "",
+    lat: 0,
+    lng: 0,
+    tz_str: "Asia/Tehran"
+  })
+  // بقیه state ها ...
   const [people, setPeople] = useState<Person[]>([])
   const [selectedPeople, setSelectedPeople] = useState<string[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPerson, setEditingPerson] = useState<Person | null>(null)
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState({
-    name: "",
-    year: 0,
-    month: 0,
-    day: 0,
-    hour: 0,
-    minute: 0,
-    city: "",
-    lat: 0,
-    lng: 0,
-    tz_str: "Asia/Tehran"
-  })
 
+
+  // map refs...
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markerRef = useRef<any>(null)
+  
+  // ...
 
   const [chartModalOpen, setChartModalOpen] = useState(false)
   const [chartContent, setChartContent] = useState("")
@@ -324,19 +326,10 @@ const loadPeople = async () => {
   const openModal = (person?: Person) => {
     if (person) {
       setEditingPerson(person)
-      console.log(person);
-      const [year, month, day] = person.birthdate.split("-").map(Number);
-      const [hour, minute] = person.birthtime.split(":").map(Number);
-      console.log(person.birthdate);
-      console.log(year);
-
       setFormData({
         name: person.name,
-        year: year, 
-        month: month, 
-        day: day, 
-        hour: hour, 
-        minute: minute, 
+        birthdate: person.birthdate, // مثلا "1990-05-20"
+        birthtime: person.birthtime, // مثلا "13:45"
         city: person.city,
         lat: person.lat,
         lng: person.lng,
@@ -346,11 +339,8 @@ const loadPeople = async () => {
       setEditingPerson(null)
       setFormData({
         name: "",
-        year: 0, 
-        month: 0, 
-        day: 0, 
-        hour: 0, 
-        minute: 0, 
+        birthdate: "",
+        birthtime: "",
         city: "",
         lat: 0,
         lng: 0,
@@ -358,6 +348,76 @@ const loadPeople = async () => {
       })
     }
     setIsModalOpen(true)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!formData.lat || !formData.lng) {
+      alert("لطفاً محل تولد را روی نقشه مشخص کنید")
+      return
+    }
+    if (!formData.birthdate || !formData.birthtime) {
+      alert("لطفاً تاریخ و ساعت تولد را وارد کنید")
+      return
+    }
+
+    // جدا کردن تاریخ و زمان به سال، ماه، روز، ساعت، دقیقه برای ارسال به سرور:
+    const [year, month, day] = formData.birthdate.split("-").map(Number)
+    const [hour, minute] = formData.birthtime.split(":").map(Number)
+
+    const personData = {
+      id: editingPerson?.id || Date.now().toString(),
+      name: formData.name,
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      city: formData.city,
+      lat: formData.lat,
+      lng: formData.lng,
+      tz_str: formData.tz_str,
+    }
+
+    try {
+      setIsLoading(true)
+      if (editingPerson) {
+        // به روز رسانی شخص
+        const response = await fetch(`${API_URL}/users/${editingPerson.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(personData),
+        })
+
+        if (response.ok) {
+          setPeople((prev) => prev.map((p) => (p.id === editingPerson.id ? personData : p)))
+          alert("اطلاعات با موفقیت به‌روزرسانی شد")
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+      } else {
+        // اضافه کردن شخص جدید
+        const response = await fetch(`${API_URL}/users/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(personData),
+        })
+
+        if (response.ok) {
+          setPeople((prev) => [...prev, personData])
+          alert("فرد جدید با موفقیت اضافه شد")
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+      }
+    } catch (error: any) {
+      console.error("خطا در ذخیره اطلاعات:", error)
+      alert("خطا در ذخیره اطلاعات: " + error.message)
+    } finally {
+      setIsLoading(false)
+      closeModal()
+    }
   }
     // name: str
     // year: int
@@ -748,29 +808,7 @@ const loadPeople = async () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>محل تولد (روی نقشه کلیک کنید)</Label>
-              <div ref={mapRef} className="h-64 rounded-lg border border-white/20" style={{ minHeight: "250px" }} />
-              <p className="text-sm opacity-75">
-                مختصات: {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="ghost" onClick={closeModal} disabled={isLoading}>
-                انصراف
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading || !formData.lat || !formData.lng}
-                className="bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white"
-              >
-                {isLoading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                ) : null}
-                {editingPerson ? "به‌روزرسانی" : "افزودن"}
-              </Button>
-            </div>
+            {/* بقیه فرم نقشه و دکمه‌ها */}
           </form>
         </Modal>
 
