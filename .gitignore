@@ -57,7 +57,7 @@ docker-compose.override.yml
 
 # SQLite / DB
 *.sqlite3
-# *.db
+*.db
 
 # VSCode debugger
 .vscode/
@@ -69,3 +69,4 @@ htmlcov/
 
 # Jupyter Notebooks (if any)
 .ipynb_checkpoints/
+svg/
