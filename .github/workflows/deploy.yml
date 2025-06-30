@@ -1,0 +1,60 @@
+name: Deploy to Server via SSH
+
+on:
+  push:
+    branches:
+      - main  # Trigger workflow only on push to main branch
+
+jobs:
+  deploy:
+    name: SSH Deployment Job
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        # ─────────────────────────────────────────────────────────────
+        # Step 1: Checkout the repository code
+        # This action fetches the latest code from the specified branch (main)
+        # ─────────────────────────────────────────────────────────────
+
+      - name: Setup SSH
+        run: |
+          # ─────────────────────────────────────────────────────────────
+          # Step 2: Setup SSH keys and known_hosts for secure server connection
+          # ─────────────────────────────────────────────────────────────
+          echo "🔧 Creating SSH directory"
+          mkdir -p ~/.ssh
+
+          echo "🔐 Adding SSH private key from GitHub Secrets"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          echo "🛡️ Adding server to known_hosts to prevent SSH authenticity prompt"
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy Application on Remote Server
+        run: |
+          # ─────────────────────────────────────────────────────────────
+          # Step 3: Connect to remote server and execute deployment commands
+          # ─────────────────────────────────────────────────────────────
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            set -e  # Exit immediately if a command exits with a non-zero status
+
+            echo "📁 Navigating to project directory"
+            cd /path/to/your/project
+
+            echo "🔄 Pulling latest changes from Git repository"
+            git pull origin main
+
+            echo "🔧 Building Docker containers"
+            docker compose build
+
+            echo "🛑 Stopping running containers"
+            docker compose down
+
+            echo "🚀 Starting containers in detached mode"
+            docker compose up -d
+
+            echo "✅ Deployment completed successfully!"
+          EOF
