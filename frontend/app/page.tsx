@@ -324,8 +324,12 @@ const loadPeople = async () => {
   const openModal = (person?: Person) => {
     if (person) {
       setEditingPerson(person)
+      console.log(person);
       const [year, month, day] = person.birthdate.split("-").map(Number);
       const [hour, minute] = person.birthtime.split(":").map(Number);
+      console.log(person.birthdate);
+      console.log(year);
+
       setFormData({
         name: person.name,
         year: year, 
