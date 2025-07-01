@@ -138,7 +138,7 @@ const loadPeople = async () => {
     setPeople(safePeople);
   } catch (error) {
     console.error("خطا در دریافت اطلاعات:", error);
-    alert(`❌ خطا در اتصال به سرور. لطفاً مطمئن شوید که سرور روی ${API_URL}L در حال اجرا است.`);
+    alert(`❌ خطا در اتصال به سرور. لطفاً مطمئن شوید که سرور روی ${API_URL} در حال اجرا است.`);
     setPeople([]);
   } finally {
     setIsLoading(false);

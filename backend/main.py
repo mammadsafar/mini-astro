@@ -58,6 +58,14 @@ class User(Base):
     city = Column(String)
     tz_str = Column(String)
 
+    @property
+    def birthdate(self):
+        return f"{self.year:04d}-{self.month:02d}-{self.day:02d}"
+
+    @property
+    def birthtime(self):
+        return f"{self.hour:02d}:{self.minute:02d}"
+
 Base.metadata.create_all(bind=engine)
 
 # ----- Pydantic Schemas -----
@@ -72,8 +80,10 @@ class UserCreate(BaseModel):
 
 class UserOut(UserCreate):
     id: int
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+    }
+
 
 # ----- Astrology Logic -----
 PLANETS = [
