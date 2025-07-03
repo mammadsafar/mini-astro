@@ -122,12 +122,13 @@ const loadPeople = async () => {
 
       const birthdate = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
       const birthtime = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-
+      console.log(person.birthdate);
+      console.log(person.birthtime);
       return {
         id: person.id?.toString() || index.toString(),
         name: person.name || "",
-        birthdate,
-        birthtime,
+        birthdate: person.birthdate,
+        birthtime: person.birthtime,
         city: person.city || "",
         lat: typeof person.lat === "number" ? person.lat : 0,
         lng: typeof person.lng === "number" ? person.lng : 0,

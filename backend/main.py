@@ -180,22 +180,23 @@ def build_chart(data: dict) -> dict:
 @app.post("/users/", response_model=UserOut, summary="Create New User (JSON)", description="Creat new User chart.")
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     new_user = {
-        "name":user.name,
-        "year": user.birthdate.split('-')[0],
-        "month":user.birthdate.split('-')[1],
-        "day":user.birthdate.split('-')[2],
-        "hour":user.birthtime.split(':')[0],
-        "minute":user.birthtime.split(':')[1],
-        "lat":user.lat,
-        "lng":user.lng,
-        "city":user.city,
-        "tz_str":user.tz_str,
+        "name": user.name,
+        "year": int(user.birthdate.split('-')[0]),
+        "month": int(user.birthdate.split('-')[1]),
+        "day": int(user.birthdate.split('-')[2]),
+        "hour": int(user.birthtime.split(':')[0]),
+        "minute": int(user.birthtime.split(':')[1]),
+        "lat": user.lat,
+        "lng": user.lng,
+        "city": user.city,
+        "tz_str": user.tz_str,
     }
     db_user = User(**new_user)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
+
 
 @app.get("/users/{user_id}", response_model=UserOut)
 def read_user(user_id: int, db: Session = Depends(get_db)):
