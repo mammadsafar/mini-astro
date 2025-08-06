@@ -1,37 +1,70 @@
-version: '3.8'
-
+# version: '3.8'
 services:
-  backend:
-    container_name: astro-backend
-    build: ./backend
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: astrology_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
     ports:
-      - "3330:3330"
+      - "5432:5432"
     volumes:
-      - ./backend:/app
-    networks:
-      - astro-network
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  frontend:
-    container_name: astro-frontend
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev  # یا Dockerfile برای prod
-      # dockerfile: Dockerfile  # یا Dockerfile برای prod
+  api:
+    build: ./app
     ports:
-      - "3000:3000"
-    env_file:
-      - ./frontend/.env           # برای dev (در prod تغییر بده)
+      - "8000:8000"
+    environment:
+      - SQLALCHEMY_DATABASE_URL=postgresql://postgres:password@postgres:5432/astrology_db
+      - SECRET_KEY=dev-secret-key
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
-      - ./frontend:/app
-      - /app/.next
-      - frontend_node_modules:/app/node_modules
-      - ~/.npm:/root/.npm
-    networks:
-      - astro-network
-
-networks:
-  astro-network:
-    driver: bridge
+      - ./svg:/app/svg
+      - ./uploads:/app/uploads
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
-  frontend_node_modules:
+  postgres_data: 
+# services:
+#   backend:
+#     container_name: astro-backend
+#     build: ./backend
+#     ports:
+#       - "3330:3330"
+#     volumes:
+#       - ./backend:/app
+#     networks:
+#       - astro-network
+
+#   frontend:
+#     container_name: astro-frontend
+#     build:
+#       context: ./frontend
+#       dockerfile: Dockerfile.dev  # یا Dockerfile برای prod
+#       # dockerfile: Dockerfile  # یا Dockerfile برای prod
+#     ports:
+#       - "3000:3000"
+#     env_file:
+#       - ./frontend/.env           # برای dev (در prod تغییر بده)
+#     volumes:
+#       - ./frontend:/app
+#       - /app/.next
+#       - frontend_node_modules:/app/node_modules
+#       - ~/.npm:/root/.npm
+#     networks:
+#       - astro-network
+
+# networks:
+#   astro-network:
+#     driver: bridge
+
+# volumes:
+#   frontend_node_modules:

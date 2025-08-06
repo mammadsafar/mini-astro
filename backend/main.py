@@ -131,7 +131,8 @@ class AstroPairInput(BaseModel):
 def create_subject(data: AstroInput) -> AstrologicalSubject:
     d = data.dict()
     d["minute"] = d.pop("minute")
-    return AstrologicalSubject(**d)
+    return simplify_astrology_data(AstrologicalSubject(**d))
+    # return AstrologicalSubject(**d)
 
 def calculate_dms(abs_pos: float):
     degree = int(abs_pos)
@@ -174,6 +175,69 @@ def build_chart(data: dict) -> dict:
         "Houses": {h: data[h] for h in HOUSES if h in data},
         "Elements": calculate_element_percentage(data),
         "Aspects": extract_aspects(data)
+    }
+
+def simplify_astrology_data(raw_data):
+    from copy import deepcopy
+
+    data = raw_data["chart"]
+    planets = data["Planet"]
+    houses = data["Houses"]
+    aspects = data["Aspects"]
+    elements = data["Elements"]
+
+    # تبدیل نام‌های کوتاه صور فلکی به کامل
+    sign_full = {
+        "Ari": "Aries", "Tau": "Taurus", "Gem": "Gemini", "Can": "Cancer",
+        "Leo": "Leo", "Vir": "Virgo", "Lib": "Libra", "Sco": "Scorpio",
+        "Sag": "Sagittarius", "Cap": "Capricorn", "Aqu": "Aquarius", "Pis": "Pisces"
+    }
+
+    # ساخت دیکشنری خانه‌ها با key خانه مثل "Fourth_House"
+    house_info_by_name = {
+        h_data["name"]: {
+            "number": i+1,
+            "sign": sign_full.get(h_data["sign"], h_data["sign"]),
+            "element": h_data["element"],
+            "quality": h_data["quality"]
+        }
+        for i, h_data in enumerate(houses.values())
+    }
+
+    # ترکیب اطلاعات سیارات و خانه‌ها
+    simplified_planets = []
+    for pid, p in planets.items():
+        house_data = house_info_by_name.get(p["house"], {})
+        simplified_planets.append({
+            "id": pid,
+            "name": p["name"],
+            "sign": sign_full.get(p["sign"], p["sign"]),
+            "element": p["element"],
+            "quality": p["quality"],
+            "retrograde": p["retrograde"],
+            "degree": {
+                "full": round(p["abs_pos"], 4),
+                "deg": p["degree"],
+                "min": p["minutes"],
+                "sec": p["seconds"]
+            },
+            "house": house_data
+        })
+
+    # ساده‌سازی جنبه‌ها
+    simplified_aspects = [
+        {
+            "between": [a["planet1"], a["planet2"]],
+            "aspect": a["aspect"],
+            "angle": a["angle"]
+        }
+        for a in aspects
+    ]
+
+    return {
+        "planets": simplified_planets,
+        "aspects": simplified_aspects,
+        "elementsSummary": deepcopy(elements)
     }
 
 # ----- CRUD Endpoints -----
