@@ -3,10 +3,12 @@ uvicorn
 kerykeion==4.25.3
 pytz
 gunicorn
-pandas
-rapidfuzz
-openpyxl
-langchain_community
-openai
-langchain
-watchgod>=0.7
+SQLAlchemy>=2.0.31,<2.1
+
+# pandas
+# rapidfuzz
+# openpyxl
+# langchain_community
+# openai
+# langchain
+# watchgod>=0.7
